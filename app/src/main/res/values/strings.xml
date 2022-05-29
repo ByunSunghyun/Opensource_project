@@ -1,8 +1,9 @@
 <resources>
     <string name="app_name">이불밖은위험해</string>
-    <string name="md_bad">미세먼지가 안좋으니 마스크 착용하세요</string>
+    <string name="md_bad">미세먼지 조심하세요</string>
     <string name="is_raining">비가 오니 우산을 챙기세요</string>
     <string name="is_snowing">눈이 오니 빙판길 주의하세요</string>
+    <string name="is_good">오늘은 낡씨가 맑아요</string>
     <string name="chamtree_bad">참나무 알레르기 주의하세요</string>
     <string name="sotree_bad">소나무 알레르기 주의하세요</string>
     <string name="jabcho_bad">잡초 알레르기 주의하세요</string>
