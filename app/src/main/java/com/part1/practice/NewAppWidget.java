@@ -1,181 +1,69 @@
 package com.example.opensource1;
 
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
+import android.appwidget.AppWidgetManager;
+import android.appwidget.AppWidgetProvider;
+import android.content.Context;
+import android.widget.RemoteViews;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-//여기까지 안드로이드 기본 제공하는 UI 라이브러리.
-
-
 import org.json.simple.JSONObject;
+
+import android.os.Build;
 import org.json.simple.JSONArray;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-//추가적으로 넣은 Java Simple 라이브러리. API에서 가져온 데이터 Parsing에 필요
-
-
+import org.json.JSONException;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
-// 자바에서 기본적으로 제공하는 URL 이용에 필요한 라이브러리
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.util.Timer;
-import java.util.TimerTask;
-// 팁 부분의 시간에 따른 순차적 변화를 위한 Timer 라이브러리 사용
+import org.json.simple.parser.JSONParser;
 
-public class MainActivity extends AppCompatActivity {
+import org.json.JSONException;
+import org.json.simple.parser.ParseException;
+import org.w3c.dom.Text;
 
-    TextView tip; //팁 UI
-    LinearLayout back; //아이콘 배경 이미지 - 기본
-    Button mdbtn, wtbtn, cotbtn, covidbtn; //제공하는 데이터에 따른 항목 조회 버튼
-    ImageView mainImg; // 어플 아이콘 이미지
+import java.time.ZoneId;
 
-    String[] tipStr = new String[7]; // 안내할 팁에 대한 String 배열
+import java.sql.Date;
 
-    int y=0; // tipStr을 순회하는 용도의 itrator 역할
-    int tip_num = 0; // 오늘 안내할 팁의 개수
-    int sum = 0; // 오늘의 위험도를 총 계산한 값
-    int sky, dust; // 오늘 날씨와 미세먼지 값
+import org.w3c.dom.Text;
 
-    data input = new data(); //각 API가 제공하는 데이터들을 담을 클래스를 따로 만들어서 사용
+/**
+ * Implementation of App Widget functionality.
+ */
+public class NewAppWidget extends AppWidgetProvider {
+    // 데이터를 저장하는 객체와 위험도 총합을 저장하는 변수, 시간을 API 맞는 형식의 String으로 제공하는 객체
+    static data input = new data();
+    static int sum;
+    static NowTime t = new NowTime();
 
-    NowTime t = new NowTime(); // 각 API가 필요로하는 형태로 날짜 및 시간의 String형태로 알맞게 가공하여 제공하는 클래스 따로 만들어서 사용
+    static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
+                                int appWidgetId) {
 
-    Timer timer;
-    TimerTask timerTask;
-    // 팁을 일정 시간당 한번씩 바꿔서 보여주는 역할 수행 위해 timer 사용
+        CharSequence widgetText = context.getString(R.string.appwidget_text);
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.new_app_widget);
 
-    Thread setui = new Thread((new Runnable() { //UI 변경에 대한 수행 스레드
-        @Override
-        public void run() {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    // 각 위험도에 따른 메인 화면에 표시되는 위험도 아이콘 이미지 변경
-                    if((sum/4)==0){
-                        mainImg.setImageResource(R.drawable.emoji0);
-                    }
-                    else if((sum/4)==1)
-                    {
-                        mainImg.setImageResource(R.drawable.emoji1);
-                    }
-                    else if((sum/4)==2)
-                    {
-                        mainImg.setImageResource(R.drawable.emoji2);
-                    }
-                    else
-                    {
-                        mainImg.setImageResource(R.drawable.emoji3);
-                    }
-                    // 오늘 날씨에 따른 날씨 데이터를 제공하는 창으로 이동하는 버튼 변경
-                    if(sky<1)
-                    {
-                        wtbtn.setBackgroundResource(R.drawable.sunny);
-                        back.setBackgroundResource(R.drawable.background_sunny);
-                    }
-                    else if(sky==3||sky==7)
-                    {
-                        back.setBackgroundResource(R.drawable.background_snow);
-                        wtbtn.setBackgroundResource(R.drawable.snow);
-
-                    }
-                    else
-                    {
-                        back.setBackgroundResource(R.drawable.background_rain);
-                        wtbtn.setBackgroundResource(R.drawable.rain);
-                    }
-                    // 오늘 미세먼지 농도에 따라 미세먼지에 대한 정확한 수치를 보여주는 창으로 이동하는 버튼 이미지 변경
-                    if(dust==0){
-                        mdbtn.setBackgroundResource(R.drawable.dust0);
-                    }
-                    else if(dust==1)
-                    {
-                        mdbtn.setBackgroundResource(R.drawable.dust1);
-                    }
-                    else if(dust==2)
-                    {
-                        mdbtn.setBackgroundResource(R.drawable.dust2);
-                    }
-                    else
-                    {
-                        mdbtn.setBackgroundResource(R.drawable.dust3);
-                    }
-                }
-
-            });
-        }
-    }));
-
-    @SuppressLint("WrongViewCast")
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.hide();// 액션바 삭제
-
-        // 각 UI객체 불러오기
-        back = findViewById(R.id.back);
-        tip = findViewById(R.id.tipText);
-        mainImg = findViewById(R.id.mainImg);
-        mdbtn = findViewById(R.id.mdButton);
-        wtbtn = findViewById(R.id.weatherButton);
-        covidbtn = findViewById(R.id.covidButton);
-        cotbtn = findViewById(R.id.cotButton);
-
-        // timer 생성
-        timer = new Timer();
-
-        //미세먼지 버튼 Listener 선언
-        mdbtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(),Microdust.class); // 누를 때 마다 선언된 클래스의 역할을 수행하여 매번 갱신
-                startActivity(intent);
-            }
-        });
-
-        //소나무 참나무 잡초 알러지 항목 버튼 Listener 선언
-        cotbtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(),Cotgaru.class); // 누를 때 마다 선언된 클래스의 역할을 수행하여 매번 갱신
-                startActivity(intent);
-            }
-        });
-
-        //날씨에 대한 항목 버튼 Listener 선언
-        wtbtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(),Weather.class); // 누를 때 마다 선언된 클래스의 역할을 수행하여 매번 갱신
-                startActivity(intent);
-            }
-        });
-
-        //감기 천식 항목 버튼 Listener 선언
-        covidbtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(),Covid.class); // 누를 때 마다 선언된 클래스의 역할을 수행하여 매번 갱신
-                startActivity(intent);
-            }
-        });
+        views.setImageViewResource(R.id.appwidget_image, R.drawable.emoji0);
 
         new Thread((new Runnable() {
             @Override
             public void run() {
                 try {
-                    // 각 API들 데이터를 불러옴
+                    //각 API 데이터 받아오기
                     get_Allergy_charmTree(input);
                     get_Allergy_SoTree(input);
                     get_Allergy_Jopcho(input);
@@ -183,87 +71,67 @@ public class MainActivity extends AppCompatActivity {
                     getAirKor(input);
                     get_cold(input);
                     get_Allergy_Chunsik(input);
-
+                    // 각 API 데이터에 따른 위험도 총합 구하기
+                    sum = get_sumAll(input);
                 } catch (IOException | ParseException e) {
                     e.printStackTrace();
                 }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Create 시에 처음으로 받아오는 데이터에 따른 이미지 변경
-                        System.out.println("전체 위험지수 : " + sum);
-                        if((sum/4)==0){
-                            mainImg.setImageResource(R.drawable.emoji0);
-                        }
-                        else if((sum/4)==1)
-                        {
-                            mainImg.setImageResource(R.drawable.emoji1);
-                        }
-                        else if((sum/4)==2)
-                        {
-                            mainImg.setImageResource(R.drawable.emoji2);
-                        }
-                        else
-                        {
-                            mainImg.setImageResource(R.drawable.emoji3);
-                        }
-                        if(sky<1)
-                        {
-                            wtbtn.setBackgroundResource(R.drawable.sunny);
-                            back.setBackgroundResource(R.drawable.background_sunny);
-                        }
-                        else if(sky==3||sky==7)
-                        {
-                            back.setBackgroundResource(R.drawable.background_snow);
-                            wtbtn.setBackgroundResource(R.drawable.snow);
 
-                        }
-                        else
-                        {
-                            back.setBackgroundResource(R.drawable.background_rain);
-                            wtbtn.setBackgroundResource(R.drawable.rain);
-                        }
-                        if(dust==0){
-                            mdbtn.setBackgroundResource(R.drawable.dust0);
-                        }
-                        else if(dust==1)
-                        {
-                            mdbtn.setBackgroundResource(R.drawable.dust1);
-                        }
-                        else if(dust==2)
-                        {
-                            mdbtn.setBackgroundResource(R.drawable.dust2);
-                        }
-                        else
-                        {
-                            mdbtn.setBackgroundResource(R.drawable.dust3);
-                        }
-                    }
-                });
             }
         })).start();
+        // 위험도에 따른 이미지 설정
+        if(sum<1)
+        {
+            views.setImageViewResource(R.id.appwidget_image, R.drawable.emoji0);
+        }
+        else if(sum<2)
+        {
+            views.setImageViewResource(R.id.appwidget_image, R.drawable.emoji1);
+        }
+        else if(sum<3)
+        {
+            views.setImageViewResource(R.id.appwidget_image, R.drawable.emoji2);
+        }
+        else
+        {
+            views.setImageViewResource(R.id.appwidget_image, R.drawable.emoji3);
+        }
 
-        // 팁 문구에 대한 Timer 수행
-        timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                tip.setText(tipStr[y]); // 팁 텍스트 갱신
-                if(y==tip_num) { // 팁 텍스트 루프하기 위한 수행
-                    y = -1;
-                }
-                y++;
-                // API에 대한 정보가 버튼을 누르는 등의 수행으로 갱신되면 다시 UI를 갱신하도록 초에 한번씩 UI 갱신 수행
-                if (setui.getState() == Thread.State.NEW)
-                    setui.start();
-            }
-        };
-        //Timer 수행
-        timer.schedule(timerTask,1000,1000);
+        // Instruct the widget manager to update the widget
+        appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 
+    @Override
+    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        // There may be multiple widgets active, so update all of them
+        for (int appWidgetId : appWidgetIds) {
+            updateAppWidget(context, appWidgetManager, appWidgetId);
+        }
+    }
 
-    //참나무 알러지에 대한 API 가져오기
-    void get_Allergy_charmTree(data in) throws IOException, ParseException {
+    @Override
+    public void onEnabled(Context context) {
+        // Enter relevant functionality for when the first widget is created
+    }
+
+    @Override
+    public void onDisabled(Context context) {
+        // Enter relevant functionality for when the last widget is disabled
+    }
+    static int get_sumAll(data in){
+        // 오늘 데이터에 따른 위험도 총합
+        int i=0;
+        i = i+Integer.parseInt(in.cold_data.today_val);
+        i = i+Integer.parseInt(in.charmTree_data.today_val);
+        i = i+Integer.parseInt(in.jopcho_data.today_val);
+        i = i+Integer.parseInt(in.soTree_data.today_val);
+        i = i+Integer.parseInt(in.chunsik_data.today_val);
+        i = i+Integer.parseInt(in.airKorDust_data.pm10Grade1h);
+        i = i+Integer.parseInt(in.airKorDust_data.pm25Grade1h);
+        i = i/4;
+        return i;
+    }
+    static void get_Allergy_charmTree(data in) throws IOException, ParseException {
         if (!in.charmTree_data.checkValid(t)) // 자료를 제공하는 기간이 아닌 경우
         {
             // 데이터를 제공하는 기간이 아닌 경우
@@ -277,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
         urlBuilder.append("&" + URLEncoder.encode("dataType","UTF-8") + "=" + URLEncoder.encode("JSON", "UTF-8")); // 반환값 => JSON 형식
         urlBuilder.append("&" + URLEncoder.encode("areaNo","UTF-8") + "=" + URLEncoder.encode("1100000000", "UTF-8")); //서울 코드: 1100000000
         urlBuilder.append("&" + URLEncoder.encode("time","UTF-8") + "=" + URLEncoder.encode(t.getTime(), "UTF-8")); // t.getTime은 직접 구현한 각 API 항목에 맞는 날짜 제공을하는 NowTime의 인스턴스
-       // 위에서 만든 URL 주소 String에서 URL 객체로 생성
+        // 위에서 만든 URL 주소 String에서 URL 객체로 생성
         URL url = new URL(urlBuilder.toString());
 
         //URL에서 받아온 데이터 읽기
@@ -302,13 +170,11 @@ public class MainActivity extends AppCompatActivity {
                 in.charmTree_data.setToday_val(item.get("today").toString()); // 오늘 위험도 값 저장.
             in.charmTree_data.setTomorrow_val(item.get("tomorrow").toString()); // 내일 위험도 값 저장.
         }
-        sum += Integer.parseInt(in.charmTree_data.today_val); // 참나무 알러지 항목의 위험도 값을 총 위험도 값에 포함
-        if((Integer.parseInt(in.charmTree_data.today_val)>1)) // 참나무 알러지가 위험 수준인 경우 팁에 추가
-            tipStr[tip_num++] = String.valueOf(R.string.chamtree_bad);
+        //sum += Integer.parseInt(in.charmTree_data.today_val); // 참나무 알러지 항목의 위험도 값을 총 위험도 값에 포함
     }
 
     //소나무 알러지에 대한 API 가져오기
-    void get_Allergy_SoTree(data in) throws IOException, ParseException {
+    static void get_Allergy_SoTree(data in) throws IOException, ParseException {
         if (!in.soTree_data.checkValid(t))// 자료를 제공하는 기간이 아닌 경우
         {
             // 데이터를 제공하는 기간이 아닌 경우
@@ -348,13 +214,10 @@ public class MainActivity extends AppCompatActivity {
                 in.soTree_data.setToday_val(item.get("today").toString()); // 오늘 위험도 값 저장.
             in.soTree_data.setTomorrow_val(item.get("tomorrow").toString()); // 내일 위험도 값 저장.
         }
-        sum += Integer.parseInt(in.soTree_data.today_val); // 소나무 알러지 항목의 위험도 값을 총 위험도 값에 포함
-        if((Integer.parseInt(in.soTree_data.today_val)>1)) // 소나무 알러지가 위험 수준인 경우 팁에 추가
-            tipStr[tip_num++] = String.valueOf(R.string.sotree_bad);
+        //sum += Integer.parseInt(in.soTree_data.today_val); // 소나무 알러지 항목의 위험도 값을 총 위험도 값에 포함
     }
 
-
-    void get_Allergy_Jopcho(data in) throws IOException, ParseException {
+    static void get_Allergy_Jopcho(data in) throws IOException, ParseException {
         if (!in.jopcho_data.checkValid(t))
         {
             // 데이터를 제공하는 기간이 아닌 경우
@@ -395,12 +258,9 @@ public class MainActivity extends AppCompatActivity {
             in.jopcho_data.setTomorrow_val(item.get("tomorrow").toString()); // 내일 위험도 값 저장.
         }
         sum += Integer.parseInt(in.jopcho_data.today_val); // 잡초류 알러지 항목의 위험도 값을 총 위험도 값에 포함
-        if((Integer.parseInt(in.jopcho_data.today_val)>1)) // 잡초류 알러지가 위험 수준인 경우 팁에 추가
-            tipStr[tip_num++] = String.valueOf(R.string.jabcho_bad);
     }
 
-
-    void getWeather(data in) throws IOException, ParseException {
+    static void getWeather(data in) throws IOException, ParseException {
         //초단기 실황 조회
         StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst"); /*URL*/
         urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "=T%2FL6AKT1fsWyadGE1j3QYFXgSmOWWV375pu6qQxuQ612F22wflZp0Ey%2BdjuPCZ8XeoShMs%2FaOPn3QJfpkbTlTw%3D%3D"); /*Service Key*/
@@ -449,16 +309,9 @@ public class MainActivity extends AppCompatActivity {
             in.weather_data.setValue(item.get("category").toString(), item.get("obsrValue").toString()); //data 클래스에 category에 해당하는 obsrValue(=예보 값) 을 저장하는 함수 구현하여 사용
         }
         in.weather_data.set_dif_temp(); // 일교차에 대한 데이터 저장
-        if((Integer.parseInt(in.weather_data.pty))==0) {tipStr[tip_num++] = String.valueOf("오늘은 낡씨가 맑아요");} //날이 맑으면 팁에 추가
-        else if((Integer.parseInt(in.weather_data.pty))==4||(Integer.parseInt(in.weather_data.pty))==7) // 눈이 오면 팁에 추가
-            tipStr[tip_num++] = String.valueOf(R.string.is_snowing);
-        else // 비가 오면 팁에 추가
-            tipStr[tip_num++] = String.valueOf(R.string.is_raining);
-        sky = Integer.parseInt(input.weather_data.pty); // 날씨에 대한 데이터 중 Sky 항목값 메인 스레드에서 사용하기 위해 저장
     }
 
-    // Air Korea에서 제공하는 미세먼지 API
-    void getAirKor(data in) throws IOException, ParseException {
+    static void getAirKor(data in) throws IOException, ParseException {
         StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty"); /*URL*/
         urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "=T%2FL6AKT1fsWyadGE1j3QYFXgSmOWWV375pu6qQxuQ612F22wflZp0Ey%2BdjuPCZ8XeoShMs%2FaOPn3QJfpkbTlTw%3D%3D"); /*Service Key*/
         urlBuilder.append("&" + URLEncoder.encode("returnType","UTF-8") + "=" + URLEncoder.encode("JSON", "UTF-8")); //반환값 = JSON
@@ -537,11 +390,6 @@ public class MainActivity extends AppCompatActivity {
         if (in.airKorDust_data.pm25Grade1h != null)
             sum += Integer.parseInt(in.airKorDust_data.pm25Grade1h);
 
-        // 미세먼지 위험 지수 값에 따라 팁을 추가
-        if(in.airKorDust_data.pm10Grade1h != null ) {
-            if ((Integer.parseInt(in.airKorDust_data.pm10Grade1h)>1))
-                tipStr[tip_num++] = String.valueOf(R.string.md_bad);
-        }
         else
         {
             //공식으로 발표된 지표에 따라 위험도 구분
@@ -577,58 +425,39 @@ public class MainActivity extends AppCompatActivity {
             {
                 in.airKorDust_data.setPm25Grade1h("3");
             }
-            // 위험도에 따른 팁 추가
-            if(in.airKorDust_data.pm10Grade1h != null && (Integer.parseInt(in.airKorDust_data.pm10Grade1h)>1))
-                tipStr[tip_num++] = String.valueOf(R.string.md_bad);
         }
-        // 미세먼지 위험도 저장
-        dust = Integer.parseInt(input.airKorDust_data.pm10Grade1h);
     }
-
-    // 천식 가능 지수 API
-    void get_Allergy_Chunsik(data in) throws IOException, ParseException {
+    static void get_Allergy_Chunsik(data in) throws IOException, ParseException {
         StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/1360000/HealthWthrIdxServiceV2/getAsthmaIdxV2"); /*URL*/
         urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "=T%2FL6AKT1fsWyadGE1j3QYFXgSmOWWV375pu6qQxuQ612F22wflZp0Ey%2BdjuPCZ8XeoShMs%2FaOPn3QJfpkbTlTw%3D%3D"); /*Service Key*/
-        urlBuilder.append("&" + URLEncoder.encode("dataType","UTF-8") + "=" + URLEncoder.encode("JSON", "UTF-8")); // 반환 값 = JSON
+        urlBuilder.append("&" + URLEncoder.encode("dataType","UTF-8") + "=" + URLEncoder.encode("JSON", "UTF-8")); // JSON 타입으로 저장
         urlBuilder.append("&" + URLEncoder.encode("areaNo","UTF-8") + "=" + URLEncoder.encode("1100000000", "UTF-8")); //서울 코드: 1100000000
-        urlBuilder.append("&" + URLEncoder.encode("time","UTF-8") + "=" + URLEncoder.encode(t.getTime(), "UTF-8")); // API 마다 필요한 날짜 데이터 형식을 구현하여 사용
+        urlBuilder.append("&" + URLEncoder.encode("time","UTF-8") + "=" + URLEncoder.encode(t.getTime(), "UTF-8")); // getTime으로 APi가 원하는 형식 날짜 데이터 전달
         urlBuilder.append("&" + URLEncoder.encode("numOfRows", "UTF-8") + "=" + URLEncoder.encode("10", "UTF-8"));
-
-        // 위에서 만든 URL 주소 String에서 URL 객체로 생성
+        //URL 객체 생성
         URL url = new URL(urlBuilder.toString());
-
-        // URL 에서 데이터 읽고 저장
+        // URL에 따른 API 데이터 받아옴
         BufferedReader bf;
         bf = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
         String result = bf.readLine();
-
-        //파싱 위와 동일
+        //API 데이터 하나의 문자열로 받아서 PARSING 시행
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObject = (JSONObject)jsonParser.parse(result);
         JSONObject response = (JSONObject)jsonObject.get("response");
         JSONObject body = (JSONObject)response.get("body");
         JSONObject items = (JSONObject) body.get("items");
         JSONArray itemArr = (JSONArray)items.get("item");
-
-
         for (int i = 0; i < itemArr.size(); i++)
         {
             JSONObject item = (JSONObject) itemArr.get(i);
-            in.chunsik_data.setDate(item.get("date").toString()); // 오늘 날짜 데이터 더장
-            if(!item.get("today").toString().isEmpty()) { // 오늘 관측 값 저장
+            in.chunsik_data.setDate(item.get("date").toString());
+            if(item.get("today").toString().isEmpty())  // 오늘 위험도 데이터 저장
                 in.chunsik_data.setToday_val(item.get("today").toString());
-            }
-            in.chunsik_data.setTomorrow_val(item.get("tomorrow").toString()); // 내일 관측값 저장
-        }
-        sum += Integer.parseInt(in.chunsik_data.today_val); // 오늘 천식 위험지수를 전체 위험 지수에 더함
-
-        if((Integer.parseInt(in.chunsik_data.today_val)>1)) // 천식 위험지수가 나쁠 경우 팁에 추가
-        {
-            tipStr[tip_num++] = String.valueOf("천식지수가 나쁘니 주의하세요");
+            in.chunsik_data.setTomorrow_val(item.get("tomorrow").toString()); // 내일 위험도 데이터 저장
         }
     }
 
-    void get_cold(data in) throws IOException, ParseException {
+    static void get_cold(data in) throws IOException, ParseException {
         if (!in.cold_data.checkValid(t))
         {
             // 데이터를 제공하는 기간이 아닌 경우
@@ -637,20 +466,20 @@ public class MainActivity extends AppCompatActivity {
         }
         StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/1360000/HealthWthrIdxServiceV2/getColdIdxV2"); /*URL*/
         urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "=T%2FL6AKT1fsWyadGE1j3QYFXgSmOWWV375pu6qQxuQ612F22wflZp0Ey%2BdjuPCZ8XeoShMs%2FaOPn3QJfpkbTlTw%3D%3D"); /*Service Key*/
-        urlBuilder.append("&" + URLEncoder.encode("dataType","UTF-8") + "=" + URLEncoder.encode("JSON", "UTF-8")); // 반환값 = JSON
+        urlBuilder.append("&" + URLEncoder.encode("dataType","UTF-8") + "=" + URLEncoder.encode("JSON", "UTF-8")); // JSON 형식으로 저장
         urlBuilder.append("&" + URLEncoder.encode("areaNo","UTF-8") + "=" + URLEncoder.encode("1100000000", "UTF-8")); //서울 코드: 1100000000
-        urlBuilder.append("&" + URLEncoder.encode("time","UTF-8") + "=" + URLEncoder.encode(t.getTime(), "UTF-8")); // API 마다 필요로 하는 날짜 형식 구현하여 제공
+        urlBuilder.append("&" + URLEncoder.encode("time","UTF-8") + "=" + URLEncoder.encode(t.getTime(), "UTF-8"));  // 시간 데이터 알맞는 형식으로 주는 함수 getTime
         urlBuilder.append("&" + URLEncoder.encode("numOfRows", "UTF-8") + "=" + URLEncoder.encode("10", "UTF-8"));
 
-        // URL객체 생성
+        // URL 객체 생성
         URL url = new URL(urlBuilder.toString());
 
-        // URL 객체를 통해 데이터 읽어오기
+        // URL 객체를 통해 데이터 저장
         BufferedReader bf;
         bf = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
         String result = bf.readLine();
 
-        //파싱 위와 동일
+        //파싱이 아직 안됨
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObject = (JSONObject)jsonParser.parse(result);
         JSONObject response = (JSONObject)jsonObject.get("response");
@@ -661,17 +490,11 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < itemArr.size(); i++)
         {
             JSONObject item = (JSONObject) itemArr.get(i);
-
-            in.cold_data.setDate(item.get("date").toString()); // 디버깅 용으로 관측 날짜를 저장
-
-            if(!item.get("today").toString().isEmpty())
-                in.cold_data.setToday_val(item.get("today").toString()); // 오늘 감기 가능 지수 데이터 저장
-
-            in.cold_data.setTomorrow_val(item.get("tomorrow").toString()); // 내일 감기 가능 지수 데이터 저장 - 디버깅용
+            in.cold_data.setDate(item.get("date").toString());
+            if(item.get("today").toString().isEmpty()) // 오늘 위험도 저장
+                in.cold_data.setToday_val(item.get("today").toString());
+            in.cold_data.setTomorrow_val(item.get("tomorrow").toString()); // 내일 위험도 저장
         }
-        this.sum += Integer.parseInt(in.cold_data.today_val); // 오늘의 위험도 총합에 감기 가능지수 위험도를 더함
 
-        if((Integer.parseInt(in.cold_data.today_val)>1)) //감기 가능 지수가 위험인 경우 팁에 이에 대한 대사 추가
-            tipStr[tip_num++] = String.valueOf(R.string.cold_bad);
     }
 }

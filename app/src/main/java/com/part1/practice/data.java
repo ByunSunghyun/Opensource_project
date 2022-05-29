@@ -1,16 +1,15 @@
-package com.part1.practice;
+package com.example.opensource1;
 
 public class data {
-    air_kor_dust airKorDust_data;
-    chunsik chunsik_data;
-    soTree soTree_data;
-    charmTree charmTree_data;
-    jopcho jopcho_data;
-    weather weather_data;
-    cold cold_data;
-    String testStr = new String("teststr");
+    air_kor_dust airKorDust_data; // 미세먼지 데이터 클래스
+    chunsik chunsik_data; // 천식 데이터 클래스
+    soTree soTree_data; // 소나무 알러지 데이터 클래스
+    charmTree charmTree_data; // 참나무 알러지 데이터 클래스
+    jopcho jopcho_data; // 잡초류 알러지 데이터 클래스
+    weather weather_data; // 날씨 데이터 클래스
+    cold cold_data; // 감기 가능지수 데이터 클래스
 
-    data(){
+    data(){ // 생성자에서 각 데이터 클래스 인스턴스 생성
         airKorDust_data = new air_kor_dust();
         chunsik_data = new chunsik();
         soTree_data = new soTree();
@@ -22,6 +21,8 @@ public class data {
 
     public class air_kor_dust {
         //Air Kor의 데이터는 가장 최신의 데이터만 전해주기에 time에 대한 data 필요 없음
+
+        // 측정소 이름, 각 미세먼지 지수 및 등급을 저장
         String sidoName;
         String stationName;
         String pm25val;
@@ -29,16 +30,12 @@ public class data {
         String pm25Grade1h;
         String pm10Grade1h;
 
+        // 클래스 멤버의 setter
         public void setPm25Grade1h(String pm25Grade1h) {
             this.pm25Grade1h = pm25Grade1h;
         }
         public void setPm10Grade1h(String pm10Grade1h) {
             this.pm10Grade1h = pm10Grade1h;
-        }
-
-
-        public void setSidoName(String sidoName) {
-            this.sidoName = sidoName;
         }
         public void setStationName(String stationName) {
             this.stationName = stationName;
@@ -51,11 +48,16 @@ public class data {
         }
     }
 
+
     public class chunsik {
+        // 천식 가능 지수에 대한 데이터를 담을 클래스
+
+        //데이터 측정일, 오늘 내일 값을 저장
         String date;
         String today_val = new String("0");
         String tomorrow_val = new String("0");
 
+        // 멤버에 대한 setter
         public void setDate(String date) {
             this.date = date;
         }
@@ -69,16 +71,19 @@ public class data {
 
     //각 알러지 데이터는 위험도가 0 1 2 3 으로 0이 낮음 1이 보통 2가 높음 3이 매우높음임
     public class soTree {
+        // 소나무 알러지에 대한 오늘과 내일에 대한 위험도 저장
         String date;
         String today_val = new String("0");
         String tomorrow_val = new String("0");
+
+        // 소나무 알러지가 발생하지 않는 주기에는 데이터를 제공하지 않기에 유효한 날짜에만 데이터를 받도록함
         public boolean checkValid(NowTime t){
             int month_int = Integer.parseInt(t.getMonth());
-            if (month_int < 4 || month_int > 6)
+            if (month_int < 4 || month_int > 6) // 제공 시기는 4~6월 사이
                 return false;
             return true;
         }
-
+        // 멤버들에 대한 setter 설정
         public void setDate(String date) {
             this.date = date;
         }
@@ -91,15 +96,19 @@ public class data {
     }
 
     public class charmTree {
+        // 참나무 알러지에 대한 데이터 저장
         String date;
         String today_val = new String("0");
         String tomorrow_val = new String("0");
+        
+        //유요한 날짜가 아닌 경우 데이터를 제공하지 않기에 이를 체크하는 함수
         public boolean checkValid(NowTime t){
             int month_int = Integer.parseInt(t.getMonth());
-            if (month_int < 4 || month_int > 6)
+            if (month_int < 4 || month_int > 6) // 4~6월 사이에만 데이터를 제공함
                 return false;
             return true;
         }
+        // 멤버에 대한 setter 설정
         public void setDate(String date) {
             this.date = date;
         }
@@ -111,17 +120,21 @@ public class data {
         }
     }
 
+    
     public class jopcho {
+        // 잡초류 알러지에 대한 데이터 저장
         String date;
         String today_val = new String("0");
         String tomorrow_val = new String("0");
+
         public boolean checkValid(NowTime t){
             int month_int = Integer.parseInt(t.getMonth());
-            if (month_int < 8 || month_int > 10)
+            if (month_int < 8 || month_int > 10) //잡초류 알러지 데이터는 8 ~ 10 월 사이에 제공
                 return false;
             return true;
         }
 
+        // 멤버에 대한 setter 정의
         public void setDate(String date) {
             this.date = date;
         }
@@ -132,14 +145,18 @@ public class data {
             this.tomorrow_val = tomorrow_val;
         }
     }
+
+
     public class cold {
+        // 감기 위험지수에 대한 데이터 저장
         String date;
         String today_val = new String("0");
         String tomorrow_val = new String("0");
 
+        // 감기 가능 지수를 제공하는 시기 체크
         public boolean checkValid(NowTime t){
             int month_int = Integer.parseInt(t.getMonth());
-            if (month_int < 9 && month_int > 4)
+            if (month_int < 9 && month_int > 4) // 감기가능 지수 제공 시기는 9월 이상, 4월 이하임
                 return false;
             return true;
         }
@@ -181,6 +198,7 @@ public class data {
         String tmx = "-1";
         String dif_temp = "-1";
 
+        // 일교차를 저장
         public void set_dif_temp(){
             int max, min;
             max = Integer.parseInt(tmx);
@@ -188,6 +206,7 @@ public class data {
             this.dif_temp = Integer.toString(max - min);
         }
 
+        // catergory에 따른 value 저장
         public void setValue(String type, String val) {
             switch (type)
             {
