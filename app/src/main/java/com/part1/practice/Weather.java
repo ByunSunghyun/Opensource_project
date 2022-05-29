@@ -36,6 +36,8 @@ import java.sql.Date;
 import android.os.Bundle;
 
 public class Weather extends AppCompatActivity {
+    //날씨 버튼을 누르고 이동하여 보이는 창에 대한 클래스
+
     // 데이터를 저장할 객체와 화면에 텍스트뷰 오브젝트
     data input = new data();
     TextView nowH, nowC, tvH, tvC, nowSky; // nowH가 습도, nowC가 온도, tvH, tvC가 한글 텍스트 의미, nowSky가 현재 날씨 텍스트 의미
@@ -62,14 +64,17 @@ public class Weather extends AppCompatActivity {
                 try {
                     // Weather API 가져오기
                     input.getWeather(null);
-                } catch (IOException /*| JSONException*/ | ParseException e) {
+                } catch (IOException | ParseException e) {
                     e.printStackTrace();
                 }
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+
                         nowC.setText(input.weather_data.t1h); // 현 기온 텍스트 설정
                         nowH.setText(input.weather_data.reh); // 현 습도 텍스트 설정
+
+                        // 오늘 날씨에 따른 텍스트 설정
                         switch (Integer.parseInt(input.weather_data.pty))
                         {
                             case 0: nowSky.setText("맑음"); break;

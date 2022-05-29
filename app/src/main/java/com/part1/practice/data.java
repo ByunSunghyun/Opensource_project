@@ -19,7 +19,7 @@ public class data {
     jopcho jopcho_data; // 잡초류 알러지 데이터 클래스
     weather weather_data; // 날씨 데이터 클래스
     cold cold_data; // 감기 가능지수 데이터 클래스
-    NowTime t;
+    NowTime t; // 날짜 클래스
 
     data(){ // 생성자에서 각 데이터 클래스 인스턴스 생성
         t = new NowTime();
@@ -147,7 +147,7 @@ public class data {
             return true;
         }
 
-        // 멤버에 대한 setter 정의
+        // 잡초류 알러지 데이터에 대한 setter 정의
         public void setDate(String date) {
             this.date = date;
         }
@@ -173,7 +173,7 @@ public class data {
                 return false;
             return true;
         }
-
+        // 감기 지수에 대한 setter
         public void setDate(String date) {
             this.date = date;
         }
@@ -219,7 +219,7 @@ public class data {
             this.dif_temp = Integer.toString(max - min);
         }
 
-        // catergory에 따른 value 저장
+        // catergory에 따른 value 저장 category는 위에 쓴 주석 확인
         public void setValue(String type, String val) {
             switch (type)
             {
@@ -273,7 +273,7 @@ public class data {
         //가져온 JSON 형식 데이터 연결
         String result = bf.readLine();
 
-        //파싱 작업
+        //API에서 받은 문자열 데이터 파싱 연산
         JSONParser jsonParser = new JSONParser(); //Parser로 파싱 수행
         JSONObject jsonObject = (JSONObject)jsonParser.parse(result); //모든 데이터를 하나의 string 형식으로 가진 result를 항목 별로 파싱 수행
         JSONObject response = (JSONObject)jsonObject.get("response"); // response에 해당하는 항목들 파싱
@@ -322,7 +322,7 @@ public class data {
         //가져온 JSON 형식 데이터 연결
         String result = bf.readLine();
 
-        //파싱 작업
+        //API에서 받은 문자열 데이터 파싱 연산
         JSONParser jsonParser = new JSONParser(); //Parser로 파싱 수행
         JSONObject jsonObject = (JSONObject)jsonParser.parse(result); //모든 데이터를 하나의 string 형식으로 가진 result를 항목 별로 파싱 수행
         JSONObject response = (JSONObject)jsonObject.get("response"); // response에 해당하는 항목들 파싱
@@ -371,7 +371,7 @@ public class data {
         //가져온 JSON 형식 데이터 연결
         String result = bf.readLine();
 
-        //파싱
+        //API에서 받은 문자열 데이터 파싱 연산
         JSONParser jsonParser = new JSONParser(); //Parser로 파싱 수행
         JSONObject jsonObject = (JSONObject)jsonParser.parse(result); //모든 데이터를 하나의 string 형식으로 가진 result를 항목 별로 파싱 수행
         JSONObject response = (JSONObject)jsonObject.get("response"); // response에 해당하는 항목들 파싱
@@ -431,7 +431,7 @@ public class data {
         //가져온 JSON 형식 데이터 연결
         String result = bf.readLine();
 
-        //파싱
+        //API에서 받은 문자열 데이터 파싱 연산
         JSONParser jsonParser = new JSONParser(); //Parser로 파싱 수행
         JSONObject jsonObject = (JSONObject)jsonParser.parse(result); //모든 데이터를 하나의 string 형식으로 가진 result를 항목 별로 파싱 수행
         JSONObject response = (JSONObject)jsonObject.get("response"); // response의 항목들 파싱
@@ -476,7 +476,7 @@ public class data {
         //가져온 JSON 형식 데이터 연결
         String result = bf.readLine();
 
-        //파싱
+        //API에서 받은 문자열 데이터 파싱 연산
         JSONParser jsonParser = new JSONParser(); //Parser로 파싱 수행
         JSONObject jsonObject = (JSONObject)jsonParser.parse(result); //모든 데이터를 하나의 string 형식으로 가진 result를 항목 별로 파싱 수행
         JSONObject response = (JSONObject)jsonObject.get("response"); // response의 항목들 파싱
@@ -569,7 +569,7 @@ public class data {
         bf = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
         String result = bf.readLine();
 
-        //파싱 위와 동일
+        //API에서 받은 문자열 데이터 파싱 연산
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObject = (JSONObject)jsonParser.parse(result);
         JSONObject response = (JSONObject)jsonObject.get("response");
@@ -618,7 +618,7 @@ public class data {
         bf = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
         String result = bf.readLine();
 
-        //파싱 위와 동일
+        //API에서 받은 문자열 데이터 파싱 연산
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObject = (JSONObject)jsonParser.parse(result);
         JSONObject response = (JSONObject)jsonObject.get("response");

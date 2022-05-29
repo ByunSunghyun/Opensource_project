@@ -79,6 +79,7 @@ public class Cotgaru extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+
                         // 각 알러지 value에 따른 UI 이미지 변경
                         switch (Integer.parseInt(input.soTree_data.today_val))
                         {

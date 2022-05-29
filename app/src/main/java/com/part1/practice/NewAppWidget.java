@@ -79,8 +79,8 @@ public class NewAppWidget extends AppWidgetProvider {
 
             }
         })).start();
-        // 위험도에 따른 이미지 설정
 
+        // 위험도에 따른 이미지 설정
         switch (sum)
         {
             case 0: views.setImageViewResource(R.id.appwidget_image, R.drawable.emoji0); break;
@@ -88,6 +88,7 @@ public class NewAppWidget extends AppWidgetProvider {
             case 2: views.setImageViewResource(R.id.appwidget_image, R.drawable.emoji2); break;
             default: views.setImageViewResource(R.id.appwidget_image, R.drawable.emoji3); break;
         }
+
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
@@ -98,16 +99,6 @@ public class NewAppWidget extends AppWidgetProvider {
         for (int appWidgetId : appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId);
         }
-    }
-
-    @Override
-    public void onEnabled(Context context) {
-        // Enter relevant functionality for when the first widget is created
-    }
-
-    @Override
-    public void onDisabled(Context context) {
-        // Enter relevant functionality for when the last widget is disabled
     }
     static int get_sumAll(data in) {
         // 오늘 데이터에 따른 위험도 총합
