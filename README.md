@@ -28,4 +28,5 @@ Weather.java -> 날씨 activity에 관한 java file입니다.
 NowTime.java -> 구동중인 기기에 현제 시간을 가져오는 기능에 관한 java file입니다.
 
 ## License
-
+Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
+Other licenses are described in used_License and licenseSet.zip
